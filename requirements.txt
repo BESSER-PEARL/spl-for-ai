@@ -1,0 +1,2 @@
+streamlit==1.31.1
+streamlit_antd_components==0.3.2

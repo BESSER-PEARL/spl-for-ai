@@ -1,6 +1,5 @@
 from feature_model.exceptions import ChildFeatureException, FeatureGroupException
 
-
 MANDATORY = 'mandatory'
 OPTIONAL = 'optional'
 OR = 'or'
@@ -9,22 +8,44 @@ ALTERNATIVE = 'alternative'
 INDEX = 0
 
 
+class FValue:
+
+    def __init__(self, t: str, values: list = None, min: float = None, max: float = None):
+        if ((min or max) and not values) or (not min and not max):
+            if t == 'int':
+                if values and any(map(lambda x: not isinstance(x, int), values)):
+                    print('ERROR: Value must be an integer')
+            if t == 'float':
+                if values and any(map(lambda x: not isinstance(x, float), values)):
+                    print('ERROR: Value must be an float')
+            if t == 'str':
+                if values and any(map(lambda x: not isinstance(x, str), values)):
+                    print('ERROR: Value must be a string')
+        else:
+            print('ERROR: Invalid arguments')
+        self.t = t
+        self.values = values
+        self.min = min
+        self.max = max
+
+
 class F:
 
     @staticmethod
     def duplicate(f: 'F', parent: 'F' = None, min: int = 1, max: int = 1):
-        new_f = F(f.name, min=min, max=max)
+        new_f = F(f.name, min=min, max=max, value=f.value)
         new_f.parent = parent
         for children_group in f.children_groups:
             new_f.children_groups.append(children_group.duplicate(new_f))
         return new_f
 
-    def __init__(self, name: str, min: int = 1, max: int = 1):
+    def __init__(self, name: str, min: int = 1, max: int = 1, value: FValue = None):
         self.name = name
         if min > max or min < 1:
             raise FeatureGroupException(f'Error in {name}: 0 < min < max')
         self.min = min
         self.max = max
+        self.value = value
         self.parent: F = None
         self.children_groups: list[FGroup] = []
         global INDEX
@@ -114,27 +135,3 @@ class RootF(F):
         INDEX = 0
         super().__init__(name)
         self.parent = self  # Easy way to define root
-
-
-class FConfig:
-
-    def __init__(self, feature: F, cardinality: int = 1):
-        self.feature = feature
-        self.parent = None
-        self.cardinality = cardinality
-        self.children: list[FConfig] = []
-
-    def to_json(self):
-        c = []
-        for child in self.children:
-            c.append(child.to_json())
-        return {self.feature.name: c}
-
-    def add_child(self, child: 'FConfig'):
-        child.parent = self
-        self.children.append(child)
-
-    def add_children(self, children: list['FConfig']):
-        for child in children:
-            child.parent = self
-        self.children.extend(children)

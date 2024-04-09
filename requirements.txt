@@ -1,2 +1,3 @@
+pyyaml==6.0.1
 streamlit==1.31.1
 streamlit_antd_components==0.3.2

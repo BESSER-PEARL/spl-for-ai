@@ -1,8 +1,10 @@
 import streamlit as st
+import yaml
 
 from feature_model.metamodel.config import FConfig
 from feature_model.metamodel.feature import OPTIONAL, MANDATORY, ALTERNATIVE, F, OR
 from feature_model.model import fm
+from generator.mergekit.yaml_generator import generate_mergekit_yaml_configuration
 
 KEY_COUNT = 0
 
@@ -97,7 +99,11 @@ def create():
     if not st.session_state['fm_error']:
         with cols[1]:
             fill_config(config, max_depth=config.get_depth(), depth=0)
-    # st.write(config.to_json())
-
-
-
+    with st.sidebar:
+        if st.button('Generate YAML config'):
+            yaml_config = generate_mergekit_yaml_configuration(config, {})
+            with open('config.yaml', 'w') as yaml_file:
+                yaml.dump(yaml_config, yaml_file, default_flow_style=False)
+                st.success('YAML config file for Mergekit successfully generated')
+            with open('config.yaml', 'r') as yaml_file:
+                st.text(yaml_file.read())

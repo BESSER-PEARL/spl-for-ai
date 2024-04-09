@@ -5,7 +5,7 @@ class FConfig:
 
     def __init__(self, feature: F, path: str):
         self.feature = feature
-        self.value = None  # TODO: Value only in leaf nodes? (yaml)
+        self.value = None
         self.path = path
         self.parent = None
         self.children: list[FConfig] = []
@@ -14,7 +14,12 @@ class FConfig:
         c = []
         for child in self.children:
             c.append(child.to_json())
-        return {self.feature.name: c}
+        if c:
+            return {self.feature.name: c}
+        elif self.value:
+            return {self.feature.name: self.value}
+        else:
+            return {self.feature.name: self.value}
 
     def add_child(self, child: 'FConfig'):
         child.parent = self
@@ -24,6 +29,17 @@ class FConfig:
         for child in children:
             child.parent = self
         self.children.extend(children)
+
+    def get_child(self, name: str) -> 'FConfig':
+        child = [c for c in self.children if c.feature.name == name]
+        if len(child) > 1:
+            raise ValueError(f"Feature {self.feature.name} has {len(child)} children with the name {name}. Make sure there are no more than one children with the same name")
+        if len(child) == 0:
+            return None
+        return child[0]
+
+    def get_children(self, name: str) -> list['FConfig']:
+        return [c for c in self.children if c.feature.name == name]
 
     def get_depth(self, depth: int = 0) -> int:
         max_depth = depth

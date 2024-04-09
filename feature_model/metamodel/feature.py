@@ -1,4 +1,4 @@
-from feature_model.exceptions import ChildFeatureException, FeatureGroupException
+from feature_model.exceptions import ChildFeatureException, FeatureGroupException, FValueException
 
 MANDATORY = 'mandatory'
 OPTIONAL = 'optional'
@@ -14,13 +14,13 @@ class FValue:
         if ((min or max) and not values) or (not min and not max):
             if t == 'int':
                 if values and any(map(lambda x: not isinstance(x, int), values)):
-                    print('ERROR: Value must be an integer')
+                    raise FValueException('Value must be an integer')
             if t == 'float':
                 if values and any(map(lambda x: not isinstance(x, float), values)):
-                    print('ERROR: Value must be an float')
+                    raise FValueException('Value must be a float')
             if t == 'str':
                 if values and any(map(lambda x: not isinstance(x, str), values)):
-                    print('ERROR: Value must be a string')
+                    raise FValueException(' Value must be a string')
         else:
             print('ERROR: Invalid arguments')
         self.t = t

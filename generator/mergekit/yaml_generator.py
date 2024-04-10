@@ -1,9 +1,6 @@
-import yaml
-
 from feature_model.metamodel.config import FConfig
 
 
-# TODO: ERROR IF PARAMETER NOT FILLED
 # TODO: NESTED PARAMETER
 # TODO: CHECK IF POSITIVE PROMPTS WITHOUT DOUBLE QUOTES WORK
 def generate_mergekit_yaml_configuration(config: FConfig, d={}):
@@ -119,24 +116,9 @@ def get_input_slices(input_slices_config: list[FConfig]):
         d = {}
         d['model'] = get_model_path(input_slice_config.get_child('model_reference'))
         layer_range = input_slice_config.get_child('layer_range')
-        d['layer_range'] = f'[{layer_range.get_child("layer_ini").value}, {layer_range.get_child("layer_end").value}]'
+        # TODO: Check tuple works
+        d['layer_range'] = [layer_range.get_child("layer_ini").value, layer_range.get_child("layer_end").value]
         if input_slice_config.get_children('parameter'):
             d['parameters'] = get_parameters(input_slice_config.get_children('parameter'))
         l.append(d)
     return l
-
-
-data = {
-    'name': 'John Doe',
-    'age': 30,
-    'occupation': 'Software Engineer',
-    'skills': ['Python', 'Java', 'JavaScript'],
-    'person': {
-        'first_name': 'John',
-        'last_name': 'Doe',
-        'attributes': {
-            'a': 1,
-            'b': 5.5
-        }
-    }
-}

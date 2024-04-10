@@ -4,6 +4,7 @@ import yaml
 from feature_model.metamodel.config import FConfig
 from feature_model.metamodel.feature import OPTIONAL, MANDATORY, ALTERNATIVE, F, OR
 from feature_model.model import fm
+from generator.mergekit.run_mergekit import run_mergekit
 from generator.mergekit.yaml_generator import generate_mergekit_yaml_configuration
 
 KEY_COUNT = 0
@@ -84,6 +85,9 @@ def fill_config(config: FConfig, max_depth, depth=0):
             config.value = col.number_input(label=config.feature.name, min_value=config.feature.value.min, max_value=config.feature.value.max, key=f'{config.path} (input)')
         elif config.feature.value.t == 'str':
             config.value = col.text_input(label=config.feature.name, key=f'{config.path} (input)')
+        if config.value is None or config.value == '':
+            st.session_state['fm_error'] = True
+            col.error('Please enter a value')
     else:
         col.write(config.feature.name)
     for child in config.children:
@@ -91,19 +95,41 @@ def fill_config(config: FConfig, max_depth, depth=0):
 
 
 def create():
-    st.header('Create')
+    st.header('Exploring the Use of Software Product Lines for the Combination of Machine Learning Models')
+    st.image('docs/source/img/feature_model.png', use_column_width=True, caption='Feature Diagram')
     st.session_state['fm_error'] = False
     cols = st.columns(2)
     with cols[0]:
+        st.header('🧠Feature Model')
+        st.info('Here you can visualize the Feature Model. As you select the features, the tree will display/hide the'
+                'children features. Some features have editable cardinality.')
         config = create_config(fm, max_depth=fm.get_depth(), depth=0)
     if not st.session_state['fm_error']:
         with cols[1]:
+            st.header('✍ Feature Configuration')
+            st.info('The selected features conform a Feature Configuration, that you will visualize here. Some features'
+                    'have attributes that must be set before proceeding to the LLM generation.')
             fill_config(config, max_depth=config.get_depth(), depth=0)
+    run_config = {}
     with st.sidebar:
-        if st.button('Generate YAML config'):
+        run_config['runtime'] = st.selectbox(label='Runtime', options=["CPU", "CPU + High-RAM", "GPU"])
+        if config.get_child('Composition tool').get_child('Mergekit'):
+            if config.get_child('Composite config').children[0].feature.name == 'Merge':
+                run_config['mergekit_branch'] = 'main'
+            if config.get_child('Composite config').children[0].feature.name == 'MoE':
+                run_config['mergekit_branch'] = 'mixtral'
+        run_config['trust_remote_code'] = st.toggle(label='Trust remote code')
+        run_config['upload_to_hf'] = st.toggle(label='Upload to HuggingFace')
+        if run_config['upload_to_hf']:
+            run_config['username'] = st.text_input(label='Username')
+            run_config['token'] = st.text_input(label='HF Token')
+            run_config['license'] = st.selectbox(label='License', options=['apache-2.0', 'cc-by-nc-4.0', 'mit', 'openrail'])
+
+        if st.button('Generate LLM', disabled=st.session_state['fm_error']):
             yaml_config = generate_mergekit_yaml_configuration(config, {})
             with open('config.yaml', 'w') as yaml_file:
                 yaml.dump(yaml_config, yaml_file, default_flow_style=False)
                 st.success('YAML config file for Mergekit successfully generated')
             with open('config.yaml', 'r') as yaml_file:
                 st.text(yaml_file.read())
+            run_mergekit(run_config)

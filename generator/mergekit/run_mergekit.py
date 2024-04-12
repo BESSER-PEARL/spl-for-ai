@@ -4,15 +4,16 @@ import streamlit as st
 
 def run_mergekit(run_config: dict):
     st.info('Cloning mergekit')
+
+    os.system('git clone https://github.com/arcee-ai/mergekit.git')
+
     if run_config['mergekit_branch'] == "main":
-        os.system('git clone https://github.com/arcee-ai/mergekit.git')
-        os.system('cd mergekit && pip install -q -e .')
         cli = "mergekit-yaml config.yaml merge --copy-tokenizer"
     elif run_config['mergekit_branch'] == "mixtral":
-        os.system('git clone -b mixtral https://github.com/arcee-ai/mergekit.git')
-        os.system('cd mergekit && pip install -q -e .')
-        os.system('pip install -qqq -qU transformers')
+        os.system('pip install transformers')
         cli = "mergekit-moe config.yaml merge --copy-tokenizer"
+
+    os.system(f'cd mergekit && git checkout {run_config["mergekit_branch"]} && pip install .')
 
     if run_config['runtime'] == "CPU":
         cli += " --allow-crimes --out-shard-size 1B --lazy-unpickle"

@@ -101,17 +101,20 @@ def create():
     cols = st.columns(2)
     with cols[0]:
         st.header('🧠Feature Model')
-        st.info('Here you can visualize the Feature Model. As you select the features, the tree will display/hide the'
+        st.info('Here you can visualize the Feature Model. As you select the features, the tree will display/hide the '
                 'children features. Some features have editable cardinality.')
         config = create_config(fm, max_depth=fm.get_depth(), depth=0)
     if not st.session_state['fm_error']:
         with cols[1]:
             st.header('✍ Feature Configuration')
-            st.info('The selected features conform a Feature Configuration, that you will visualize here. Some features'
+            st.info('The selected features conform a Feature Configuration, that you will visualize here. Some features '
                     'have attributes that must be set before proceeding to the LLM generation.')
             fill_config(config, max_depth=config.get_depth(), depth=0)
     run_config = {}
     with st.sidebar:
+        run_config['model_name'] = st.text_input(label='Model name')
+        if not run_config['model_name']:
+            st.session_state['fm_error'] = True
         run_config['runtime'] = st.selectbox(label='Runtime', options=["CPU", "CPU + High-RAM", "GPU"])
         if config.get_child('Composition tool').get_child('Mergekit'):
             if config.get_child('Composite config').children[0].feature.name == 'Merge':
@@ -122,7 +125,7 @@ def create():
         run_config['upload_to_hf'] = st.toggle(label='Upload to HuggingFace')
         if run_config['upload_to_hf']:
             run_config['username'] = st.text_input(label='Username')
-            run_config['token'] = st.text_input(label='HF Token')
+            run_config['hf_token'] = st.text_input(label='HF Token')
             run_config['license'] = st.selectbox(label='License', options=['apache-2.0', 'cc-by-nc-4.0', 'mit', 'openrail'])
 
         if st.button('Generate LLM', disabled=st.session_state['fm_error']):
@@ -131,5 +134,6 @@ def create():
                 yaml.dump(yaml_config, yaml_file, default_flow_style=False)
                 st.success('YAML config file for Mergekit successfully generated')
             with open('config.yaml', 'r') as yaml_file:
-                st.text(yaml_file.read())
+                run_config['yaml_config'] = yaml_file.read()
+            st.text(run_config['yaml_config'])
             run_mergekit(run_config)

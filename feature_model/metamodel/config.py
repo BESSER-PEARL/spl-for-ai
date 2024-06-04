@@ -15,11 +15,13 @@ class FConfig:
         for child in self.children:
             c.append(child.to_json())
         if c:
+            if len(c) == 1:
+                return {self.feature.name: c[0]}
             return {self.feature.name: c}
-        elif self.value:
+        elif self.value is not None:
             return {self.feature.name: self.value}
         else:
-            return {self.feature.name: self.value}
+            return self.feature.name
 
     def add_child(self, child: 'FConfig'):
         child.parent = self

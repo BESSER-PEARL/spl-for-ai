@@ -1,5 +1,6 @@
 import streamlit as st
 import yaml
+from huggingface_hub import HfApi
 
 from feature_model.metamodel.config import FConfig
 from feature_model.metamodel.feature import OPTIONAL, MANDATORY, ALTERNATIVE, F, OR
@@ -88,6 +89,12 @@ def fill_config(config: FConfig, max_depth, depth=0):
         if config.value is None or config.value == '':
             st.session_state['fm_error'] = True
             col.error('Please enter a value')
+        elif config.feature.name == 'path':
+            try:
+                model_info = HfApi().model_info(config.value)
+            except Exception as e:
+                st.session_state['fm_error'] = True
+                col.error('The model path could not be found')
     else:
         col.write(config.feature.name)
     for child in config.children:
@@ -110,6 +117,7 @@ def create():
             st.info('The selected features conform a Feature Configuration, that you will visualize here. Some features '
                     'have attributes that must be set before proceeding to the LLM generation.')
             fill_config(config, max_depth=config.get_depth(), depth=0)
+            #st.json(config.to_json())
     run_config = {}
     with st.sidebar:
         run_config['model_name'] = st.text_input(label='Model name')

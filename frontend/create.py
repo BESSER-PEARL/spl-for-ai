@@ -121,6 +121,7 @@ def create():
     run_config = {}
     with st.sidebar:
         run_config['model_name'] = st.text_input(label='Model name')
+        run_config['directory'] = st.text_input(label='Model output directory', value='merge')
         if not run_config['model_name']:
             st.session_state['fm_error'] = True
         run_config['runtime'] = st.selectbox(label='Runtime', options=["CPU", "CPU + High-RAM", "GPU"])

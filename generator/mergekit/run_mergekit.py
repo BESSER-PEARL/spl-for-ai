@@ -12,10 +12,10 @@ def run_mergekit(run_config: dict):
     os.system('git clone https://github.com/arcee-ai/mergekit.git')
 
     if run_config['mergekit_branch'] == "main":
-        cli = "mergekit-yaml config.yaml merge --copy-tokenizer"
+        cli = f"mergekit-yaml config.yaml {run_config['directory']} --copy-tokenizer"
     elif run_config['mergekit_branch'] == "mixtral":
         os.system('pip install transformers')
-        cli = "mergekit-moe config.yaml merge --copy-tokenizer"
+        cli = f"mergekit-moe config.yaml {run_config['directory']} --copy-tokenizer"
 
     os.system(f'cd mergekit && git checkout {run_config["mergekit_branch"]} && pip install .')
 
@@ -31,9 +31,12 @@ def run_mergekit(run_config: dict):
     with st.spinner('Running'):
         os.system(cli)
 
+    st.info(f'Run completed')
+
     with st.spinner('Uploading to Hugging Face'):
         if run_config['upload_to_hf']:
             upload_huggingface(run_config)
+            st.info(f'Uploaded to Hugging Face')
 
 
 def upload_huggingface(run_config: dict):
@@ -184,12 +187,12 @@ print(outputs[0]["generated_text"])
             models=models,
             yaml_config=run_config['yaml_config'],
             username=run_config['username'],
-            license=license
+            license=run_config['license']
         )
 
     # Save the model card
     card = ModelCard(content)
-    card.save('merge/README.md')
+    card.save(f"{run_config['directory']}/README.md")
 
     # Defined in the secrets tab in Google Colab
     api = HfApi(token=run_config['hf_token'])
@@ -202,5 +205,5 @@ print(outputs[0]["generated_text"])
     )
     api.upload_folder(
         repo_id=f"{run_config['username']}/{run_config['model_name']}",
-        folder_path="merge",
+        folder_path=run_config['directory'],
     )

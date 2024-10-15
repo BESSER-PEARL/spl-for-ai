@@ -36,4 +36,4 @@ This project is supported by the Luxembourg National Research Fund (FNR) PEARL p
 
 This project is licensed under the [MIT](https://mit-license.org/) license
 
-Copyright © 2023 Luxembourg Institute of Science and Technology. All rights reserved.
+Copyright © 2024 Luxembourg Institute of Science and Technology. All rights reserved.
